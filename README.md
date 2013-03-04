@@ -133,10 +133,11 @@ Perm Space:▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁:mi
 
 The recency queue is used by the Cache to determine which LRU item in the cache to remove when the maxSize has been
 reached.  The item is not determine by the age of the item from when it was last written to the queue (Least Recently Added),
-nor is it determine by which item is closest to it's Expiration time (may be these options are nice to have features on the cache).
-When using expireAfterWrite(10, TimeUnit.SECONDS); with it being write access you are interested in (just pondering out loud)
-However, having said this how the cache works it that the item to remove upon reaching the maximum size is determined
-by when it was last accessed, based on access ordering.
+nor is it determined by which item is closest to it's Expiration time (may be these options are nice to have features on the cache).
+Such that, when using expireAfterWrite(10, TimeUnit.SECONDS); with it being write access you are interested in (just pondering out loud).
+
+However, having said this. How the cache works is that the recency queue is used to determine the item to remove upon
+reaching the maximum size, based on access ordering.
 
 ### Modifications
 
