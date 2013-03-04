@@ -25,7 +25,7 @@ a Large number of consecutive cache hits, with no writes; would not be most appr
 for the Cache Builder.  The cache builder records access for the get, which adds an entry to a recencyQueue.  As a
 result this uses a large amount of memory, that causes gc:
 
-![LocalCache MAT screenshot](.Screen Shot 2013-03-04 at 22.01.48.png)
+![LocalCache MAT screenshot](./Screen Shot 2013-03-04 at 22.01.48.png)
 
 The benchmark also doesn't really simulate what would be a live situation.  You wouldn't ever probably get 1 million
 cache reads on the same cache item in succession (for each thread, it is highly unrealistic);
