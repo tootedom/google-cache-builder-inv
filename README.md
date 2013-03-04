@@ -23,7 +23,9 @@ Closer inspection and analysis of the use case, it was seen/found that:
 
 a Large number of consecutive cache hits, with no writes; would not be most appropriate use
 for the Cache Builder.  The cache builder records access for the get, which adds an entry to a recencyQueue.  As a
-result this uses a large amount of memory, that causes gc.
+result this uses a large amount of memory, that causes gc:
+
+![LocalCache MAT screenshot](.Screen Shot 2013-03-04 at 22.01.48.png)
 
 The benchmark also doesn't really simulate what would be a live situation.  You wouldn't ever probably get 1 million
 cache reads on the same cache item in succession (for each thread, it is highly unrealistic);
@@ -297,7 +299,7 @@ Check to see if there is any difference for the concurrentlinkedhashmap
             <artifactId>concurrentlinkedhashmap-lru</artifactId>
             <version>1.3.2</version>
         </dependency>
-```xml
+```
 
 A similar effect is seen with the concurrentlinkedhashmap, however, the memory is retained in a ConcurrentQueue
 referenced by a "buffers" variable:
@@ -338,3 +340,7 @@ Perm Space in mb:
                 :   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1
                 :   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1
 ```
+
+Image of heap used in Eclipse Mat:
+
+![ConcurrentLinkedHashMap MAT screenshot](./Screen Shot 2013-03-04 at 21.50.52.png)
