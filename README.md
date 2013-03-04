@@ -26,9 +26,9 @@ for the Cache Builder.  The cache builder records access for the get, which adds
 result this uses a large amount of memory, that causes gc.
 
 The benchmark also doesn't really simulate what would be a live situation.  You wouldn't ever probably get 1 million
-cache reads on the same cache item in succession; without a write occurring (the recency queue is flushed when a write
-occurs in the segment of the hash associated with the recency queue.  So it's unrealistic that you'd get such heavy
-number of gets.
+cache reads on the same cache item in succession (for each thread, it is highly unrealistic);
+without a write occurring (the recency queue is flushed when a write occurs in the segment of the hash associated with
+the recency queue.  So it's unrealistic that you'd get such heavy number of gets.
 
 However, it's interesting to see the overhead of the Cache, and is something to consider when using as a cache for things.
 
@@ -38,8 +38,10 @@ The class (RunCachingTest) in the root package, runs the benchmark
 
 jvm runtime options: -Xmx512m -Xms512m -Xmn128m -XX:-UseBiasedLocking
 
-The benchmark basically does 1 million .get() hits.  Running with 1,2,4,8,16,32,64 threads.
-The first benchmark runs the CacheBuilder scenario, the second hits the Class.getAnnotations directly.
+The benchmark basically does 1 million .get() hits (for eache thread that is running - unrealistic yes, it's just a
+throughput test to see the effects of caching, and if there's anything to take into consideration - i.e. in this
+case memory).  The benchmark is run with 1,2,4,8,16,32,64 threads.  The first benchmark runs the CacheBuilder scenario,
+the second hits the Class.getAnnotations directly.
 
 The benchmark outputs the amount of gc:
 
@@ -130,8 +132,11 @@ Perm Space:▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁:mi
 ```
 
 The recency queue is used by the Cache to determine which LRU item in the cache to remove when the maxSize has been
-reached.  The item is not determine by the age of the item from when it was last added to the queue (Least Recently Added),
-not is it determine by the item closest to it's Expiry time (maybe options that might be nice to have features on the cache).
+reached.  The item is not determine by the age of the item from when it was last written to the queue (Least Recently Added),
+nor is it determine by which item is closest to it's Expiration time (may be these options are nice to have features on the cache).
+When using expireAfterWrite(10, TimeUnit.SECONDS); with it being write access you are interested in (just pondering out loud)
+However, having said this how the cache works it that the item to remove upon reaching the maximum size is determined
+by when it was last accessed, based on access ordering.
 
 ### Modifications
 
