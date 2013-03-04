@@ -4,6 +4,7 @@ import org.greencheek.annotations.domain.ClassWithAnnotations;
 import org.greencheek.annotations.service.AnnotationReader;
 import org.greencheek.annotations.service.BasicAnnotationReader;
 import org.greencheek.annotations.service.CachingAnnotationReader;
+import org.greencheek.annotations.service.CachingLinkedHashMapAnnotationReader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -26,6 +27,7 @@ public class RunCachingTest {
     private static ExecutorService threadPool = Executors.newFixedThreadPool(MAX_NO_THREADS);
     private static Logger log = LoggerFactory.getLogger(RunCachingTest.class);
     private static final AnnotationReader cache = new CachingAnnotationReader();
+    private static final AnnotationReader linkedCache = new CachingLinkedHashMapAnnotationReader();
     private static final AnnotationReader noncache = new BasicAnnotationReader();
     private static final GCMonitor gcMonitor = new GCMonitor();
 
@@ -47,6 +49,7 @@ public class RunCachingTest {
 
         AnnotationReaderExecutor cachingCallable = new AnnotationReaderExecutor("CacheBuilder",cache,iterations);//createCallables(NO_THREADS,iterations,cache);
         AnnotationReaderExecutor noncachingCallables = new AnnotationReaderExecutor("GetAnnotations",noncache,iterations);//createCallables(NO_THREADS,iterations,noncache);
+        AnnotationReaderExecutor linkedCachingCallable = new AnnotationReaderExecutor("LinkedCacheBuilder",linkedCache,iterations);
 
 
         log.info("Warmup");
@@ -54,9 +57,11 @@ public class RunCachingTest {
 
         long startCompileTime = jit.getTotalCompilationTime();
         gcMonitor.start();
+
         RunCachingTest.executeTestWithThreads(1,iterations,noncachingCallables);
         RunCachingTest.executeTestWithThreads(10,iterations,noncachingCallables);
-        RunCachingTest.executeTestWithThreads(20,iterations,noncachingCallables);
+        RunCachingTest.executeTestWithThreads(20, iterations, noncachingCallables);
+
         long endCompileTime = jit.getTotalCompilationTime();
         gcMonitor.report();
         log.info("Jit compilation: {}",(endCompileTime-startCompileTime));
@@ -67,6 +72,15 @@ public class RunCachingTest {
         RunCachingTest.executeTestWithThreads(1,iterations,cachingCallable);
         RunCachingTest.executeTestWithThreads(10,iterations,cachingCallable);
         RunCachingTest.executeTestWithThreads(20,iterations,cachingCallable);
+        endCompileTime = jit.getTotalCompilationTime();
+        gcMonitor.report();
+        log.info("Jit compilation: {}",(endCompileTime-startCompileTime));
+
+        gcMonitor.start();
+        startCompileTime = jit.getTotalCompilationTime();
+        RunCachingTest.executeTestWithThreads(1,iterations,linkedCachingCallable);
+        RunCachingTest.executeTestWithThreads(10,iterations,linkedCachingCallable);
+        RunCachingTest.executeTestWithThreads(20,iterations,linkedCachingCallable);
         endCompileTime = jit.getTotalCompilationTime();
         gcMonitor.report();
         log.info("Jit compilation: {}",(endCompileTime-startCompileTime));
@@ -93,6 +107,7 @@ public class RunCachingTest {
         runThreadedExecution(32, iterations, cachingCallable);
         runThreadedExecution(64, iterations, cachingCallable);
 
+
         heapMonitor.stop();
         cache.close();
         System.gc();
@@ -116,9 +131,34 @@ public class RunCachingTest {
         runThreadedExecution(32, iterations, noncachingCallables);
         runThreadedExecution(64, iterations, noncachingCallables);
 
-        threadPool.shutdownNow();
+        heapMonitor.stop();
+        cache.close();
+        System.gc();
+
+        log.info("");
+        log.info("");
+        log.info("");
+        log.info("");
+        log.info("--------------");
+        log.info("LINKED CACHE BUILDER");
+        log.info("--------------");
+
+        heapMonitor = new HeapMonitor();
+
+        runThreadedExecution(1, iterations, linkedCachingCallable);
+        runThreadedExecution(2, iterations, linkedCachingCallable);
+        runThreadedExecution(4, iterations, linkedCachingCallable);
+        runThreadedExecution(8, iterations, linkedCachingCallable);
+        runThreadedExecution(16, iterations, linkedCachingCallable);
+        runThreadedExecution(32, iterations, linkedCachingCallable);
+        runThreadedExecution(64, iterations, linkedCachingCallable);
 
         heapMonitor.stop();
+        linkedCache.close();
+
+
+        threadPool.shutdownNow();
+
     }
 
     static class Monitor

@@ -3,6 +3,7 @@ package org.greencheek.annotations;
 import org.greencheek.annotations.axis.IterativeVerticalAxisCreator;
 import org.greencheek.spark.Spark;
 import org.greencheek.annotations.axis.VerticalAxisCreator;
+import org.greencheek.spark.Spark2;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -90,12 +91,26 @@ public class HeapMonitor {
 
         int[] heap =toIntArray(memory.toArray(new Integer[memory.size()]));
 
-        Spark.SparkResult heapGraph = Spark.graph(heap);
+        Spark2.Spark2Result heapGraph = Spark2.graph(heap);
 
-        log.info("{}:{}",memoryName,heapGraph);
-        for(String axisValue : heapAxisOutputter.verticalAxis(heap,4)) {
-            log.info("{}:{}",String.format("%1$" + memoryName.length() + "s", ""),axisValue);
+        if(log.isInfoEnabled()) {
+            String tabbedLine = String.format("%1$" + (memoryName.length()+(" in mb".length())) + "s", "");
+            log.info("{} in mb:",memoryName);
+            log.info("(min:{}/max:{})",heapGraph.getMin(),heapGraph.getMax());
+            for(String heapGraphLine : heapGraph.graphToStringArray()) {
+                log.info("{}:{}",tabbedLine,heapGraphLine);
+            }
+
+            for(String axisValue : heapAxisOutputter.verticalAxis(heap,4)) {
+                log.info("{}:{}",tabbedLine,axisValue);
+            }
+            log.info("");
         }
+
+
+
+
+
     }
 
     public void stopRecordingMemoryUse() {

@@ -12,7 +12,7 @@ public class IterativeVerticalAxisCreator implements VerticalAxisCreator {
 
     public static void main(String[] args) {
         IterativeVerticalAxisCreator i = new IterativeVerticalAxisCreator();
-        for(String s : i.verticalAxis(new int[]  { 2,3,10,2,3,40,9,1,67,54,20,3,40,30,100,598,88,76,4,53,10,98} ,2)) {
+        for(String s : i.verticalAxis(new int[]  { 2,3,10,2,3,40,9,1,67,456,23,94,101,1,234,54,20,3,40,30,100,598,88,76,4,53,10,98} ,2)) {
             System.out.println(s);
         }
 
@@ -39,9 +39,6 @@ public class IterativeVerticalAxisCreator implements VerticalAxisCreator {
     public List<String> writeNumbersVertical(int[] number, int tick)
     {
         List<StringBuilder> rows = new ArrayList<StringBuilder>();
-
-
-
 
         int column =0;
         for(int num : number) {
@@ -82,9 +79,6 @@ public class IterativeVerticalAxisCreator implements VerticalAxisCreator {
             StringBuilder stringRow;
             if(rowsOfStrings.size()<rowNumber) {
                 stringRow = new StringBuilder(String.format("%1$" + stringLength + "s", ""));
-//                if(rowNumber!=1) {
-//                    for(int i=column;i>=0;i--) { stringRow.append(' ');}
-//                }
                 rowsOfStrings.add(stringRow);
             } else {
                 stringRow = rowsOfStrings.get(rowNumber - 1);

@@ -23,6 +23,7 @@ import java.util.concurrent.locks.LockSupport;
 public class CachingAnnotationReader implements AnnotationReader {
 
     private final LoadingCache<Class,Annotation[]> cache;
+    private final AtomicInteger access = new AtomicInteger(0);
 
     public CachingAnnotationReader()  {
         cache = CacheBuilder.newBuilder()
@@ -41,7 +42,11 @@ public class CachingAnnotationReader implements AnnotationReader {
     @Override
     public Annotation[] getAnnotations(final Class clazz) {
 //        cache.stats();  // this call reduces the recency queue
-        return cache.getUnchecked(clazz);
+        Annotation[] annos = cache.getUnchecked(clazz);
+//        int x = access.incrementAndGet();
+//        if(x%1000==0) { cache.put(clazz,annos); }
+        return annos;
+
     }
 
     public void close() {
