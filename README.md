@@ -416,7 +416,7 @@ constant operation, resulting in an OOM exception.
 
 - Patched (1<<10) ConcurrentLinkedHashMap
 
-
+IMAGE MISSING
 
 In order to get 64 threads run using guava, we need to use a very large heap:
 
