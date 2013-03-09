@@ -344,3 +344,85 @@ Perm Space in mb:
 Image of heap used in Eclipse Mat:
 
 ![ConcurrentLinkedHashMap MAT screenshot](./Screen Shot 2013-03-04 at 21.50.52.png)
+
+
+## ConcurrentLinkedHashMap
+
+Based on your information regarding the threshold value in the CLHM for the "buffers"
+from the developer of the CLHM (https://groups.google.com/d/msg/guava-discuss/LWutCZo8eH0/pBgXKa6293wJ),
+I took a clone of the CLHM and adapted it on my local machine..
+
+Changing threshold (MAXIMUM_BUFFER_SIZE) in the ConcurrentLinkedHashMap code locally to 1 << 10
+(which results in about 8k of pending entries on the queue) and running the synthetic tests above.
+The results shows that now the Cached version using ConcurrentLinkedHashMap,
+is much more performant than, that of the non cached version.   Equally with 1<<12
+(32k constant pending items) the synthetic benchmark is much more performant.
+
+
+Unfortunately, I do not see a similar threshold value to run in the guava CacheBuilder to
+check if the same is true for it.
+
+The size allocated to the eden space (and the type of gc collector that is in operation) is also
+of importance in judging the trade off between throughput and the buffer size.
+
+The below results shows the difference between running a the synthetic benchmark for:
+
+- Google Guava Cache, ConcurrentLinkedHashMap and non cached class.getAnnotations()
+and
+- Google Guava Cache, ConcurrentLinkedHashMap (with 1<<10) and non cached class.getAnnotations()
+
+The results are also run with the concurrent low pause collector (CMS) and the throughput collector
+
+### CMS
+
+The runtime properties of the CMS synthetic benchmark is as follows.  The benchmark runs the test with
+2,4,8,16,32,64 and 128 threads.  The exception to this is the Guava caching, which is only run to a
+max of 64 threads due to duration of the test taking too long.
+
+The results shown are from visualvm attached to the process during run time, to monitor the CPU and heap
+size.  The test runs in the order of: Google Guava cache, class.getAnnotations, ConcurrentLinkedHashMap
+
+```
+-Xmx512m -Xms512m -Xmn64m -XX:-UseBiasedLocking -XX:+CMSConcurrentMTEnabled
+-XX:+UseParNewGC -XX:+CMSIncrementalMode -XX:+CMSIncrementalPacing
+-XX:+UseConcMarkSweepGC -XX:+ExplicitGCInvokesConcurrent
+```
+
+- Unpatched (1<<20) ConcurrentLinkedHashMap
+
+![CMS Collector Results, No Patch](./CMS_no_patch.png)
+
+- Patched (1<<10) ConcurrentLinkedHashMap
+
+![CMS Collector Results, Patch](./CMS_patch.png)
+
+### Throught put collector
+
+
+The runtime properties of the through put collector synthetic benchmark is as follows.  The benchmark is
+run with 2,4,8,16,32,64 and 128 threads.  The exception to this is the Guava caching, a max of 32 could only
+be tested due to hitting OOM exceptions thrown by the GC collector.  You'll notice in the properties that
+the heap size had to be trippled, in order to be able to run 32 threads for the gauva lib.  With the
+through put collector, running any more threads causes large heap use, and as a result the GC is in
+constant operation, resulting in an OOM exception.
+
+```
+-Xmx1536m -Xms1536m -Xmn64m -XX:-UseBiasedLocking -XX:+UseParallelOldGC -XX:+UseParallelGC
+```
+
+- Unpatched (1<<20) ConcurrentLinkedHashMap
+
+![Through Put Collector Results, No Patch](./Throughputcollector_no_patch.png)
+
+- Patched (1<<10) ConcurrentLinkedHashMap
+
+![Through Put Collector Results, Patch](./Throughputcollector_patch.png)
+
+
+In order to get 64 threads run using guava, we need to use a very large heap:
+
+```
+-Xmx3072m -Xms3072m -Xmn1024m -XX:-UseBiasedLocking -XX:+UseParallelOldGC -XX:+UseParallelGC
+```
+
+![Through Put Collector Results, to get 64 threads running](./largeheap_64_threads_guava.png)
