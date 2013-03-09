@@ -416,7 +416,6 @@ constant operation, resulting in an OOM exception.
 
 - Patched (1<<10) ConcurrentLinkedHashMap
 
-![Through Put Collector Results, Patch](./Throughputcollector_patch.png)
 
 
 In order to get 64 threads run using guava, we need to use a very large heap:
