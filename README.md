@@ -377,11 +377,13 @@ The results are also run with the concurrent low pause collector (CMS) and the t
 
 The runtime properties of the CMS synthetic benchmark is as follows.  The benchmark runs the test with
 2,4,8,16,32,64 and 128 threads.  The exception to this is the Guava caching, which is only run to a
-max of 64 threads due to duration of the test taking too long.
+max of 64 threads below (it would need a larger heap size - shown later).
 
-The results shown are from visualvm attached to the process during run time, to monitor the CPU and heap
-size.  The test runs in the order of: Google Guava cache, class.getAnnotations, ConcurrentLinkedHashMap
+The results/graphs shown are from visualvm attached to the process during run time in order to
+monitor the CPU and heap size.  The test runs in the order of: Google Guava cache, class.getAnnotations,
+ConcurrentLinkedHashMap
 
+The CMS jvm properties
 ```
 -Xmx512m -Xms512m -Xmn64m -XX:-UseBiasedLocking -XX:+CMSConcurrentMTEnabled
 -XX:+UseParNewGC -XX:+CMSIncrementalMode -XX:+CMSIncrementalPacing
@@ -418,6 +420,8 @@ constant operation, resulting in an OOM exception.
 
 ![Through Put Collector Results, Patch](./Throughputcollector_patch.png)
 
+#### Large Heap Size
+
 In order to get 64 threads run using guava, we need to use a very large heap:
 
 ```
@@ -425,3 +429,48 @@ In order to get 64 threads run using guava, we need to use a very large heap:
 ```
 
 ![Through Put Collector Results, to get 64 threads running](./largeheap_64_threads_guava.png)
+
+
+To get 192 threads running with the guava library, we'd need about 12gb.  The more threads you
+throw at the .get on the guava cache, the more memory you need:
+
+```
+-Xmx12288m -Xms12288m -Xmn512m -XX:-UseBiasedLocking -XX:+UseParallelOldGC -XX:+UseParallelGC
+```
+
+![Through Put Collector Results, to get 192 threads running](./memorygrowth-192.png)
+
+
+#### Memory Requirements/Use of original CLHM
+
+On the other hand the original ConcurrentLinkedHashMap (CLHM) has a bounded queue.  Each buffer is
+bounded to 1<<20 (1048576 ReadTasks).  The number of buffers (queues) in the CLHM is dependent
+upon the process you are running to the nearest power of 2:
+
+```java
+    NUMBER_OF_BUFFERS = ceilingNextPowerOfTwo(Runtime.getRuntime().availableProcessors());
+
+    // x is  Runtime.getRuntime().availableProcessors()
+    1 << (Integer.SIZE - Integer.numberOfLeadingZeros(x - 1));
+```
+
+For example on a 8 cpu (quad core, 2 threads per core - for instance), you'll have about 8 million
+pended read tasks:
+
+![Buffers memory use](./buffers-memory-use.png)
+![Number of pending read tasks](./number-of-pending-readtasks.png)
+
+This means that the CLHM can run happily with the throughput collector, as longs as there's enough heap
+to cope with 8 million pending tasks.
+
+
+Here's a graph with the CLHM run with 1536 threads (huge amount that is in no way realistic, it is
+just provided as an example how the CLHM is bounded).
+```
+-Xmx2048m -Xms2048m -Xmn1024m -XX:MaxPermSize=512m -XX:PermSize=512m -XX:-UseBiasedLocking -XX:+UseParallelOldGC -XX:+UseParallelGC
+```
+
+![1536 threads](./n1536threads.png)
+
+
+
