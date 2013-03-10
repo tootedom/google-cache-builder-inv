@@ -466,11 +466,24 @@ to cope with 8 million pending tasks.
 
 Here's a graph with the CLHM run with 1536 threads (huge amount that is in no way realistic, it is
 just provided as an example how the CLHM is bounded).
+
 ```
 -Xmx2048m -Xms2048m -Xmn1024m -XX:MaxPermSize=512m -XX:PermSize=512m -XX:-UseBiasedLocking -XX:+UseParallelOldGC -XX:+UseParallelGC
 ```
 
-![1536 threads](./n1536threads.png)
+![1536 threads](./1536threads.png)
+
+With the queue bounded to 1<<10 (1024 items per queue), you need less memory allocated to cope with
+8k of pending tasks (8 queues * 1024 pending items).
+
+```
+-Xmx256m -Xms256m -Xmn128m -XX:MaxPermSize=512m -XX:PermSize=512m -XX:-UseBiasedLocking -XX:+UseParallelOldGC -XX:+UseParallelGC
+```
+
+![8k pending items](./8kpendingitems.png)
+![8k pending items queue view](./8kpendingitems-queueview.png)
+![8k pending items 1536 threads](./smallheap1536threads.png)
+
 
 
 
