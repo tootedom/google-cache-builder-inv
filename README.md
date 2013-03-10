@@ -458,6 +458,7 @@ For example on a 8 cpu (quad core, 2 threads per core - for instance), you'll ha
 pended read tasks:
 
 ![Buffers memory use](./buffers-memory-use.png)
+![8 million pending items queue view](./8mpendingitems-queueview.png)
 ![Number of pending read tasks](./number-of-pending-readtasks.png)
 
 This means that the CLHM can run happily with the throughput collector, as longs as there's enough heap
@@ -472,6 +473,9 @@ just provided as an example how the CLHM is bounded).
 ```
 
 ![1536 threads](./1536threads.png)
+
+#### Memory Requirements/Use of reduced queue size CLHM
+
 
 With the queue bounded to 1<<10 (1024 items per queue), you need less memory allocated to cope with
 8k of pending tasks (8 queues * 1024 pending items).
